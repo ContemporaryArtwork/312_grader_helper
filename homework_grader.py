@@ -95,7 +95,7 @@ def get_csv():
     for key in grades:
         line = ""
         for idx in range(len(grades[key])):
-            line+=grades[key][idx]
+            line+=("\""+grades[key][idx]+"\"")
             if idx!=5:
                 line+=", "  
         line += "\n"
