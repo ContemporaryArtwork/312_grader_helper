@@ -4,6 +4,8 @@ import subprocess
 import threading
 import json
 import sys
+import docker
+import webbrowser
 
 filename = ".gradingstatus"
 assert (len(sys.argv)>1), "You need an argument for the location of your assigned students"
@@ -12,6 +14,9 @@ grades_filename = ".gradedata"
 global grades
 grades = {}
 PORT = 8000
+firstrun = True
+
+
 
 def readassigned(current):
     #If the file exists
@@ -105,6 +110,7 @@ def get_csv():
 #One unit of grading
 def grading_unit():
     global grades
+    global firstrun
     #Get the index of the student currently being graded
     current = readcurrent()
     
@@ -113,7 +119,9 @@ def grading_unit():
     if current_student==-1:
         print("You've run out of student to grade! Crashing and printing csv...")
         print("Copy and paste in results, click on data in the top bar and press split text to columns")
+        print("------------")
         print(get_csv())
+        print("------------")
         return False
     try:
         current_student_dir = glob(f'./{current_student}/')[0]
@@ -132,37 +140,49 @@ def grading_unit():
     
     #They might have a report, if so print it
     if (len(report_location)>=1):
+        print(f'{current_student}\'s Report:')
+        print("------------")
         with open(report_location[0]) as f:
                 content = f.readlines()
         f.close()
-        print(f'{current_student}\'s Report')
+        
         for line in content:
             print(line.strip())
+        print("------------")
     else:
+        print("------------")
         print(f'Appears {current_student} does not have a report.txt...')
-    print(f'\nKilling containers, building and running container on port {PORT}...')
+        print("------------")
+    print(f'Killing containers, building and running container on port {PORT}...')
     #Kill all docker containers
+    '''
     kill = threading.Thread(target=run,
         args=('docker ps -q | % { docker stop $_ }',), 
     )
-    kill.start()
+    kill.start()'''
+    client = docker.from_env()
+    for container in client.containers.list():
+        container.stop()
     
     #Build the container
-    docker_build_output = run(f'docker build -t student -f {dockerfile_location} {os.path.dirname(dockerfile_location)}')
+    dcontainer = client.images.build(path=os.path.realpath(os.path.dirname(dockerfile_location)),dockerfile=os.path.realpath(dockerfile_location),tag="student")
+    #docker_build_output = run(f'docker build -t student -f {dockerfile_location} {os.path.dirname(dockerfile_location)}')
     #Open path in explorer
-    subprocess.Popen(f'explorer /select,\"{os.path.realpath(dockerfile_location)}\"')
+    if os.name == 'nt':
+        subprocess.Popen(f'explorer /select,\"{os.path.realpath(dockerfile_location)}\"')
     #Run the container
-    kill.join()
-    runT = threading.Thread(target=run,
-        args=(f'docker container run --publish {PORT}:8000 --detach student',), 
-    )
-    runT.start()
-    runT.join()
+    #kill.join()
+    container = client.containers.run('student',ports={f'{PORT}/tcp':8000},
+                                      detach=True)
+    if firstrun:
+        webbrowser.open(f'http://localhost:{PORT}/')
+        firstrun = False
     print("Done!")
-    
+    print("------------")
     
     
     grades[current_student] = prompt()
+    print("------------")
     prompt_text = "q to quit, c to continue, r to redo grading data entry, j to print csv output\n"
     
     u_input = input(prompt_text)
@@ -181,28 +201,32 @@ def grading_unit():
         return True
     elif u_input == "j":
         print("Copy and paste in results, click on data in the top bar and press split text to columns")
+        print("------------")
         print(get_csv())
+        print("------------")
         return False
+
+
+
 if not os.path.isfile(filename) or not os.path.isfile(grades_filename):
     print("Local data files do not exist. Rewriting...")
     grades = {}
     writegrades()
     writecurrent("0")
 else: 
-    reset = input("Enter y to reset data\n")
+    reset = input("Enter y to reset data (no option to edit data currently)\n")
     if (reset=="y"):
+        
         grades = {}
         writegrades()
-        writecurrent("0")
+        writecurrent(str(0))
     grades = readgrades()
 
 while grading_unit():
     print("Grading loop...")
 print("Killing remaining container...please wait...")   
-kill = threading.Thread(target=run,
-        args=('docker ps -q | % { docker stop $_ }',), 
-    )
-kill.start()
-kill.join()
+client = docker.from_env()
+for container in client.containers.list():
+    container.stop()
     
 
