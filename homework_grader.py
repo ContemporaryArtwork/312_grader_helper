@@ -11,6 +11,7 @@ assigned_filename = sys.argv[1]
 grades_filename = ".gradedata"
 global grades
 grades = {}
+PORT = 8000
 
 def readassigned(current):
     #If the file exists
@@ -139,7 +140,7 @@ def grading_unit():
             print(line.strip())
     else:
         print(f'Appears {current_student} does not have a report.txt...')
-    print("\nKilling containers, building and running container...")
+    print(f'\nKilling containers, building and running container on port {PORT}...')
     #Kill all docker containers
     kill = threading.Thread(target=run,
         args=('docker ps -q | % { docker stop $_ }',), 
@@ -153,7 +154,7 @@ def grading_unit():
     #Run the container
     kill.join()
     runT = threading.Thread(target=run,
-        args=('docker container run --publish 8000:8000 --detach student',), 
+        args=(f'docker container run --publish {PORT}:8000 --detach student',), 
     )
     runT.start()
     runT.join()
