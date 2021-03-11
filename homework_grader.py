@@ -163,6 +163,10 @@ def grading_unit():
     client = docker.from_env()
     for container in client.containers.list():
         container.stop()
+        if (len(sys.argv)>2 and sys.argv[2]=="--deleteall"):
+            container.remove()
+        
+            
     
     #Build the container
     dcontainer = client.images.build(path=os.path.realpath(os.path.dirname(dockerfile_location)),dockerfile=os.path.realpath(dockerfile_location),tag="student")
@@ -228,5 +232,9 @@ print("Killing remaining container...please wait...")
 client = docker.from_env()
 for container in client.containers.list():
     container.stop()
+    if (len(sys.argv)>2 and sys.argv[2]=="--deleteall"):
+        container.remove()
+
+
     
 
