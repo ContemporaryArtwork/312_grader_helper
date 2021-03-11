@@ -148,6 +148,8 @@ def grading_unit():
     
     #Build the container
     docker_build_output = run(f'docker build -t student -f {dockerfile_location} {os.path.dirname(dockerfile_location)}')
+    #Open path in explorer
+    subprocess.Popen(f'explorer /select,\"{os.path.realpath(dockerfile_location)}\"')
     #Run the container
     kill.join()
     runT = threading.Thread(target=run,
