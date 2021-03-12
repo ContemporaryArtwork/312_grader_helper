@@ -103,7 +103,7 @@ def get_csv():
         for idx in range(len(grades[key])):
             line+=("\""+grades[key][idx].replace("\"","\'")+"\"")
             if idx!=5:
-                line+=", "  
+                line+=","  
         line += "\n"
         retval += line
     return retval
@@ -111,14 +111,15 @@ def get_csv():
 def grading_unit():
     global grades
     global firstrun
+    grades = readgrades()
     #Get the index of the student currently being graded
     current = readcurrent()
     
     #Get the ubid of that student
     current_student = readassigned(current)
     if current_student==-1:
-        print("You've run out of student to grade! Crashing and printing csv...")
-        print("Copy and paste in results, click on data in the top bar and press split text to columns")
+        print("Copy and paste in results into first obj column in google sheets, click on data in the top bar and press split text to columns")
+        print("If you have any troubles, make sure to be splitting by comma")
         print("------------")
         print(get_csv())
         print("------------")
@@ -127,7 +128,8 @@ def grading_unit():
         current_student_dir = glob(f'./{current_student}/')[0]
     except:
         print("You've run out of student to grade in this directory! Crashing and printing csv...")
-        print("Copy and paste in results, click on data in the top bar and press split text to columns")
+        print("Copy and paste in results into first obj column in google sheets, click on data in the top bar and press split text to columns")
+        print("If you have any troubles, make sure to be splitting by comma")
         print(get_csv())
         return False
     #Recursively search for their dockerfile
@@ -184,7 +186,6 @@ def grading_unit():
     print("Done!")
     print("------------")
     
-    
     grades[current_student] = prompt()
     print("------------")
     prompt_text = "q to quit, c to continue, r to redo grading data entry, j to print csv output\n"
@@ -193,8 +194,15 @@ def grading_unit():
     
     while (u_input!="q" and u_input!="c" and u_input!="r" and u_input!="j"):
         u_input = input(prompt_text)
-    while(u_input=="r"):
-        grades[current_student] = prompt()
+    while(u_input=="r" or u_input == "j"):
+        if u_input=="r":
+            grades[current_student] = prompt()
+        else:
+            print("Copy and paste in results into first obj column in google sheets, click on data in the top bar and press split text to columns")
+            print("If you have any troubles, make sure to be splitting by comma")
+            print("------------")
+            print(get_csv())
+            print("------------")
         u_input = input(prompt_text)
     writegrades()
     current = int(current) + 1
@@ -203,12 +211,7 @@ def grading_unit():
         return False
     elif u_input == "c":
         return True
-    elif u_input == "j":
-        print("Copy and paste in results, click on data in the top bar and press split text to columns")
-        print("------------")
-        print(get_csv())
-        print("------------")
-        return False
+    
 
 
 
@@ -218,13 +221,21 @@ if not os.path.isfile(filename) or not os.path.isfile(grades_filename):
     writegrades()
     writecurrent("0")
 else: 
-    reset = input("Enter y to reset data (no option to edit data currently)\n")
+    prompt_text = "Enter y to reset data or j to print csv output\n"
+    reset = input(prompt_text)
     if (reset=="y"):
-        
         grades = {}
         writegrades()
         writecurrent(str(0))
-    grades = readgrades()
+    elif reset=="j":
+        grades = readgrades()
+        print("Copy and paste in results into first obj column in google sheets, click on data in the top bar and press split text to columns")
+        print("If you have any troubles, make sure to be splitting by comma")
+        print("------------")
+        print(get_csv())
+        print("------------")
+        reset = input("Enter any key to leave...")
+    
 
 while grading_unit():
     print("Grading loop...")
