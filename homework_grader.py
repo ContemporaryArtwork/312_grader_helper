@@ -226,21 +226,38 @@ def grading_unit():
             if (len(sys.argv)>2 and sys.argv[2]=="--deleteall"):
                 container.remove()
             
+        buildAndRun = True
+        while buildAndRun:
+            try:
+                #Build the container
+                dcontainer = client.images.build(path=os.path.realpath(os.path.dirname(dockerfile_location)),dockerfile=os.path.realpath(dockerfile_location),tag="student")
+                #docker_build_output = run(f'docker build -t student -f {dockerfile_location} {os.path.dirname(dockerfile_location)}')
+                #Open path in explorer
                 
-        
-        #Build the container
-        dcontainer = client.images.build(path=os.path.realpath(os.path.dirname(dockerfile_location)),dockerfile=os.path.realpath(dockerfile_location),tag="student")
-        #docker_build_output = run(f'docker build -t student -f {dockerfile_location} {os.path.dirname(dockerfile_location)}')
-        #Open path in explorer
-        
-        #Run the container
-        #kill.join()
-        container = client.containers.run('student',ports={f'{PORT}/tcp':8000},
-                                          detach=True)
-        if firstrun:
-            webbrowser.open(f'http://localhost:{PORT}/')
-            firstrun = False
-        print("Done!")
+                #Run the container
+                #kill.join()
+                container = client.containers.run('student',ports={f'{PORT}/tcp':8000},
+                                                  detach=True)
+                if firstrun:
+                    webbrowser.open(f'http://localhost:{PORT}/')
+                    firstrun = False
+                buildAndRun = False
+                print("Done!")
+            except Exception as e:
+                print("Error!")
+                print(e)
+                tryAgain = input("Try building/running again? y/n")
+                while tryAgain!="y" and tryAgain!="n":
+                    tryAgain = input("Try building/running again? y/n")
+                if (tryAgain=="n"):
+                    buildAndRun = False
+                    exitVar = input("Exit? y/n")
+                    while exitVar!="y" and exitVar!="n":  
+                        exitVar = input("Exit? y/n")
+                    if (exitVar=="y"):
+                        sys.exit("Crashing because dockerfile is broken") 
+                    else:
+                        print("Going onto grading...")
     
     print("------------")
     grades[current_student] = prompt()
