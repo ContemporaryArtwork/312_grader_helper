@@ -149,65 +149,98 @@ def grading_unit():
         print("------------")
         return False
     try:
-        current_student_dir = glob(f'./{current_student}/')[0]
+        current_student_dir = glob(f'.\\{current_student}\\')[0]
     except:
         print("You've run out of student to grade in this directory! Crashing and printing csv...")
         print("Copy and paste in results into first obj column in google sheets, click on data in the top bar and press split text to columns")
         print("If you have any troubles, make sure to be splitting by comma")
         print(get_csv())
         return False
-    #Recursively search for their dockerfile
-    dockerfile_location = glob(current_student_dir+"/**/[Dd]ockerfile",recursive=True)
-    #Recursively search for their report
-    report_location = glob(current_student_dir+"/**/*report.txt",recursive=True)
-    #They must have a dockerfile
-    assert(len(dockerfile_location)==1),f'{current_student_dir} does not have a dockerfile?'
-    dockerfile_location = dockerfile_location[0]
     
+    #Recursively search for their dockerfile
+    dockerfile_location = glob(current_student_dir+"\\**\\[Dd]ockerfile",recursive=True)
+    #Recursively search for their report
+    report_location = glob(current_student_dir+"\\**\\*report*",recursive=True)
+    #They must have a dockerfile
     #They might have a report, if so print it
-    if (len(report_location)>=1):
-        print(f'{current_student}\'s Report:')
+    if (len(report_location)>1):
         print("------------")
+        print(f'{current_student} has more than 1 reports')
+        for num,report in enumerate(report_location):
+            print(num,report)
+        idx = int(input("Enter the index of the report location you like the best!\n"))
+        assert(idx>=0 and idx<len(report_location)),"Crashing because you entered a bad index!!"
+        report_location = [report_location[idx]]
+        print("------------")
+    
+    if (len(report_location)==1):
+        print(f'{current_student}\'s Report:\n'+"------------")
+        
         with open(report_location[0]) as f:
                 content = f.readlines()
         f.close()
         
         for line in content:
             print(line.strip())
+        if (len(content)==0):
+            print("Empty report!")
         print("------------")
+    
     else:
         print("------------")
         print(f'Appears {current_student} does not have a report.txt...')
         print("------------")
-    print(f'Killing containers, building and running container on port {PORT}...')
-    #Kill all docker containers
-    '''
-    kill = threading.Thread(target=run,
-        args=('docker ps -q | % { docker stop $_ }',), 
-    )
-    kill.start()'''
-    client = docker.from_env()
-    for container in client.containers.list():
-        container.stop()
-        if (len(sys.argv)>2 and sys.argv[2]=="--deleteall"):
-            container.remove()
-        
             
+    #Handle dockerfile stuff
+    if len(dockerfile_location)==1:
+        dockerfile_location = dockerfile_location[0]
+        
+    if (len(dockerfile_location)>1):
+        print("UHOH\n------------")
+        print(f'{current_student} has more than 1 dockerfile!?!?')
+        for num,dockerfile in enumerate(dockerfile_location):
+            print(num,dockerfile)
+        idx = int(input("Enter the index of the dockefile location you like the best!\n"))
+        assert(idx>=0 and idx<len(dockerfile_location)),"Crashing because you entered a bad index!!"
+        dockerfile_location = dockerfile_location[idx]
+        print("------------")
     
-    #Build the container
-    dcontainer = client.images.build(path=os.path.realpath(os.path.dirname(dockerfile_location)),dockerfile=os.path.realpath(dockerfile_location),tag="student")
-    #docker_build_output = run(f'docker build -t student -f {dockerfile_location} {os.path.dirname(dockerfile_location)}')
-    #Open path in explorer
-    if os.name == 'nt':
-        subprocess.Popen(f'explorer /select,\"{os.path.realpath(dockerfile_location)}\"')
-    #Run the container
-    #kill.join()
-    container = client.containers.run('student',ports={f'{PORT}/tcp':8000},
-                                      detach=True)
-    if firstrun:
-        webbrowser.open(f'http://localhost:{PORT}/')
-        firstrun = False
-    print("Done!")
+    
+    if (len(dockerfile_location)<1):
+        print(f'{current_student} does not have a dockerfile? Initiating manual grading...')    
+    else:
+        
+        if os.name == 'nt':
+            subprocess.Popen(f'explorer /select,\"{os.path.realpath(dockerfile_location)}\"')
+        
+        print(f'Killing containers, building and running container on port {PORT}...')
+        #Kill all docker containers
+        '''
+        kill = threading.Thread(target=run,
+            args=('docker ps -q | % { docker stop $_ }',), 
+        )
+        kill.start()'''
+        client = docker.from_env()
+        for container in client.containers.list():
+            container.stop()
+            if (len(sys.argv)>2 and sys.argv[2]=="--deleteall"):
+                container.remove()
+            
+                
+        
+        #Build the container
+        dcontainer = client.images.build(path=os.path.realpath(os.path.dirname(dockerfile_location)),dockerfile=os.path.realpath(dockerfile_location),tag="student")
+        #docker_build_output = run(f'docker build -t student -f {dockerfile_location} {os.path.dirname(dockerfile_location)}')
+        #Open path in explorer
+        
+        #Run the container
+        #kill.join()
+        container = client.containers.run('student',ports={f'{PORT}/tcp':8000},
+                                          detach=True)
+        if firstrun:
+            webbrowser.open(f'http://localhost:{PORT}/')
+            firstrun = False
+        print("Done!")
     print("------------")
     
     grades[current_student] = prompt()
