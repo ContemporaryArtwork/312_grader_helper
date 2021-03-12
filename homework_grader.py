@@ -200,7 +200,7 @@ def grading_unit():
         print(f'{current_student} has more than 1 dockerfile!?!?')
         for num,dockerfile in enumerate(dockerfile_location):
             print(num,dockerfile)
-        idx = int(input("Enter the index of the dockefile location you like the best!\n"))
+        idx = int(input("Enter the index of the dockerfile location you like the best!\n"))
         assert(idx>=0 and idx<len(dockerfile_location)),"Crashing because you entered a bad index!!"
         dockerfile_location = dockerfile_location[idx]
         print("------------")
