@@ -56,10 +56,9 @@ def writecurrent(current):
     f.close()
     
 def writegrades():
-    f = open(grades_filename, "w")
+    with open(grades_filename, "w") as outfile:
+        json.dump(grades, outfile, indent=2, separators=(',', ': '))
     
-    f.write(json.dumps(grades))
-    f.close()
 
 def readgrades():
     if not os.path.isfile(grades_filename):
@@ -232,21 +231,17 @@ def grading_unit():
             print(get_csv())
             print("------------")
         u_input = input(prompt_text)
-    
-    if u_input == "q":
-        save = input("save and quit? y/n\n")
-        while save!="y" and save!="n":
-            save = input("save? y/n")
-        if save=="y":
-            writegrades()
-            current = int(current) + 1
-            writecurrent(str(current))
-        
-        return False
-    elif u_input == "c":
+    save = input("save? y/n\n")
+    while save!="y" and save!="n":
+        save = input("save? y/n")
+    if save=="y":
         writegrades()
         current = int(current) + 1
         writecurrent(str(current))
+            
+    if u_input == "q":
+        return False
+    elif u_input == "c":
         return True
     
 
