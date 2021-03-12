@@ -259,7 +259,7 @@ if not os.path.isfile(filename) or not os.path.isfile(grades_filename):
     writecurrent("0")
 else:
     grades = readgrades()
-    prompt_text = "Enter y to reset data or j to print csv output\n"
+    prompt_text = "Enter y to reset data or j to print csv output. Otherwise press enter to start!\n"
     print(f'You have graded {len(grades)} students')
     reset = input(prompt_text)
     if (reset=="y"):
