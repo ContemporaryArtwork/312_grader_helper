@@ -192,8 +192,8 @@ def grading_unit():
         print("------------")
             
     #Handle dockerfile stuff
-    if len(dockerfile_location)==1:
-        dockerfile_location = dockerfile_location[0]
+    
+        
         
     if (len(dockerfile_location)>1):
         print("UHOH\n------------")
@@ -202,14 +202,14 @@ def grading_unit():
             print(num,dockerfile)
         idx = int(input("Enter the index of the dockerfile location you like the best!\n"))
         assert(idx>=0 and idx<len(dockerfile_location)),"Crashing because you entered a bad index!!"
-        dockerfile_location = dockerfile_location[idx]
+        dockerfile_location = [dockerfile_location[idx]]
         print("------------")
     
     
-    if (len(dockerfile_location)<1):
+    if (len(dockerfile_location)==0):
         print(f'{current_student} does not have a dockerfile? Initiating manual grading...')    
     else:
-        
+        dockerfile_location = dockerfile_location[0]
         if os.name == 'nt':
             subprocess.Popen(f'explorer /select,\"{os.path.realpath(dockerfile_location)}\"')
         
@@ -241,32 +241,31 @@ def grading_unit():
             webbrowser.open(f'http://localhost:{PORT}/')
             firstrun = False
         print("Done!")
-    print("------------")
     
+    print("------------")
     grades[current_student] = prompt()
     print("\nYour input:")
     print(grades[current_student])
     print("------------")
     prompt_text = "q to quit, c to continue, r to redo grading data entry, j to print csv output\n"
     
-    u_input = input(prompt_text)
+    u_input = ""
     
-    while (u_input!="q" and u_input!="c" and u_input!="r" and u_input!="j"):
-        u_input = input(prompt_text)
-    while(u_input=="r" or u_input == "j"):
+    while (u_input!="q" and u_input!="c"):
         if u_input=="r":
             print("------------")
             grades[current_student] = prompt()
             print("\nYour input:")
             print(grades[current_student])
             print("------------")
-        else:
+        elif u_input == "j":
             print("Copy and paste in results into first obj column in google sheets, click on data in the top bar and press split text to columns")
             print("If you have any troubles, make sure to be splitting by comma")
             print("------------")
             print(get_csv())
             print("------------")
         u_input = input(prompt_text)
+    
     save = input("save? y/n\n")
     while save!="y" and save!="n":
         save = input("save? y/n")
