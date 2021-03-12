@@ -7,6 +7,7 @@ import sys
 import docker
 import webbrowser
 
+
 filename = ".gradingstatus"
 assert (len(sys.argv)>1), "You need an argument for the location of your assigned students"
 assigned_filename = sys.argv[1]
@@ -210,6 +211,7 @@ def grading_unit():
     print("------------")
     
     grades[current_student] = prompt()
+    print("\nYour input:")
     print(grades[current_student])
     print("------------")
     prompt_text = "q to quit, c to continue, r to redo grading data entry, j to print csv output\n"
@@ -222,6 +224,7 @@ def grading_unit():
         if u_input=="r":
             print("------------")
             grades[current_student] = prompt()
+            print("\nYour input:")
             print(grades[current_student])
             print("------------")
         else:
