@@ -159,7 +159,7 @@ def grading_unit():
     #Recursively search for their dockerfile
     dockerfile_location = glob(current_student_dir+"/**/[Dd]ockerfile",recursive=True)
     #Recursively search for their report
-    report_location = glob(current_student_dir+"/**/report.txt",recursive=True)
+    report_location = glob(current_student_dir+"/**/*report.txt",recursive=True)
     #They must have a dockerfile
     assert(len(dockerfile_location)==1),f'{current_student_dir} does not have a dockerfile?'
     dockerfile_location = dockerfile_location[0]
