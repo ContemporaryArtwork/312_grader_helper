@@ -81,16 +81,40 @@ def run(cmd):
     completed = subprocess.run(["powershell", "-Command", cmd], capture_output=True)
     return completed
 def prompt():
-    Obj1 = input("Score for Obj1:\n")
-    Obj1Notes = input("Notes for Obj1:\n")
-    Obj2 = input("Score for Obj2:\n")
-    Obj2Notes = input("Notes for Obj2:\n")
-    Obj3 = input("Score for Obj3:\n")
-    Obj3Notes = input("Notes for Obj3:\n")
-    Obj4 = input("Score for Obj4:\n")
-    Obj4Notes = input("Notes for Obj4:\n")
-    Bonus = input("Score for bonus:\n")
-    return [Obj1,Obj2,Obj3,Obj4,Bonus,"Objective 1: "+Obj1Notes+"; Objective 2: "+Obj2Notes+"; Objective 3: "+Obj3Notes+"; Objective 4: "+Obj4Notes]
+    userData = []
+    userData.append(input("Score for Obj1:\n"))
+    userData.append(input("Notes for Obj1:\n"))
+    userData.append(input("Score for Obj2:\n"))
+    userData.append(input("Notes for Obj2:\n"))
+    userData.append(input("Score for Obj3:\n"))
+    userData.append(input("Notes for Obj3:\n"))
+    userData.append(input("Score for Obj4:\n"))
+    userData.append(input("Notes for Obj4:\n"))
+    userData.append(input("Score for bonus:\n"))
+    userData.append(input("Notes for the bonus:\n"))
+    userData.append(input("Extra notes:\n"))
+    notesString = ""
+    for idx in range(len(userData)):
+        if len(userData[idx])>0:
+            if (idx==1 or idx==3 or idx == 5 or idx == 7 or idx == 9 or idx==10) and len(notesString)>0:
+                notesString += "; "
+            if idx==1:
+                notesString += ("Objective 1: " + userData[idx])
+            elif idx==3:
+                notesString += ("Objective 2: " + userData[idx])
+            elif idx==5:
+                notesString += ("Objective 3: " + userData[idx])
+            elif idx==7:
+                notesString += ("Objective 4: " + userData[idx])
+            elif idx==9:
+                notesString += ("Notes for the bonus: " + userData[idx])
+            elif idx==10:
+                notesString += ("Extra notes: " + userData[idx])
+            
+                
+    assert(len(userData)>0),"You need to enter something!"            
+    #notesString = "Objective 1: "+Obj1Notes+"; Objective 2: "+Obj2Notes+"; Objective 3: "+Obj3Notes+"; Objective 4: "+Obj4Notes+"; Bonus: "+BonusNotes+"; Other notes: "+MiscNotes
+    return [userData[0],userData[2],userData[4],userData[6],userData[8],notesString]
 
 def get_csv():
     retval = ""
@@ -187,6 +211,7 @@ def grading_unit():
     print("------------")
     
     grades[current_student] = prompt()
+    print(grades[current_student])
     print("------------")
     prompt_text = "q to quit, c to continue, r to redo grading data entry, j to print csv output\n"
     
@@ -196,7 +221,10 @@ def grading_unit():
         u_input = input(prompt_text)
     while(u_input=="r" or u_input == "j"):
         if u_input=="r":
+            print("------------")
             grades[current_student] = prompt()
+            print(grades[current_student])
+            print("------------")
         else:
             print("Copy and paste in results into first obj column in google sheets, click on data in the top bar and press split text to columns")
             print("If you have any troubles, make sure to be splitting by comma")
@@ -204,12 +232,21 @@ def grading_unit():
             print(get_csv())
             print("------------")
         u_input = input(prompt_text)
-    writegrades()
-    current = int(current) + 1
-    writecurrent(str(current))
+    
     if u_input == "q":
+        save = input("save and quit? y/n\n")
+        while save!="y" and save!="n":
+            save = input("save? y/n")
+        if save=="y":
+            writegrades()
+            current = int(current) + 1
+            writecurrent(str(current))
+        
         return False
     elif u_input == "c":
+        writegrades()
+        current = int(current) + 1
+        writecurrent(str(current))
         return True
     
 
@@ -220,15 +257,16 @@ if not os.path.isfile(filename) or not os.path.isfile(grades_filename):
     grades = {}
     writegrades()
     writecurrent("0")
-else: 
+else:
+    grades = readgrades()
     prompt_text = "Enter y to reset data or j to print csv output\n"
+    print(f'You have graded {len(grades)} students')
     reset = input(prompt_text)
     if (reset=="y"):
         grades = {}
         writegrades()
         writecurrent(str(0))
     elif reset=="j":
-        grades = readgrades()
         print("Copy and paste in results into first obj column in google sheets, click on data in the top bar and press split text to columns")
         print("If you have any troubles, make sure to be splitting by comma")
         print("------------")
