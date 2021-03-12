@@ -101,7 +101,7 @@ def get_csv():
     for key in grades:
         line = ""
         for idx in range(len(grades[key])):
-            line+=("\""+grades[key][idx]+"\"")
+            line+=("\""+grades[key][idx].replace("\"","\'")+"\"")
             if idx!=5:
                 line+=", "  
         line += "\n"
@@ -232,8 +232,8 @@ print("Killing remaining container...please wait...")
 client = docker.from_env()
 for container in client.containers.list():
     container.stop()
-    if (len(sys.argv)>2 and sys.argv[2]=="--deleteall"):
-        container.remove()
+if (len(sys.argv)>2 and sys.argv[2]=="--deleteall"):
+    run("docker ps -a -q | % { docker rm $_ }")
 
 
     
