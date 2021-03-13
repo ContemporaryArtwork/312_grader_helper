@@ -92,7 +92,7 @@ def prompt():
     userData.append(input("Notes for Obj4:\n"))
     userData.append(input("Score for bonus:\n"))
     userData.append(input("Notes for the bonus:\n"))
-    userData.append(input("Extra notes:\n"))
+    userData.append(input("Overall notes:\n"))
     notesString = ""
     for idx in range(len(userData)):
         if len(userData[idx])>0:
