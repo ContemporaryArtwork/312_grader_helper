@@ -176,7 +176,7 @@ def grading_unit():
     if (len(report_location)==1):
         print(f'{current_student}\'s Report:\n'+"------------")
         
-        with open(report_location[0]) as f:
+        with open(report_location[0],encoding='utf-8') as f:
                 content = f.readlines()
         f.close()
         
