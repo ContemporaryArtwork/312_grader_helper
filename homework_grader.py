@@ -109,7 +109,7 @@ def prompt():
             elif idx==9:
                 notesString += ("Notes for the bonus: " + userData[idx])
             elif idx==10:
-                notesString += ("Extra notes: " + userData[idx])
+                notesString += ("Overall notes: " + userData[idx])
             
                 
     assert(len(userData)>0),"You need to enter something!"            
