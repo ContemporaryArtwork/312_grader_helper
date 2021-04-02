@@ -6,6 +6,11 @@ import json
 import sys
 import docker
 import webbrowser
+from datetime import datetime
+
+
+
+
 
 
 filename = ".gradingstatus"
@@ -16,6 +21,7 @@ global grades
 grades = {}
 PORT = 8000
 firstrun = True
+regrade = False
 
 
 
@@ -98,6 +104,7 @@ def prompt():
         if len(userData[idx])>0:
             if (idx==1 or idx==3 or idx == 5 or idx == 7 or idx == 9 or idx==10) and len(notesString)>0:
                 notesString += "; "
+            
             if idx==1:
                 notesString += ("Objective 1: " + userData[idx])
             elif idx==3:
@@ -111,7 +118,8 @@ def prompt():
             elif idx==10:
                 notesString += ("Overall notes: " + userData[idx])
             
-                
+    if regrade:
+        notesString = "Regrade: "+notesString
     assert(len(userData)>0),"You need to enter something!"            
     #notesString = "Objective 1: "+Obj1Notes+"; Objective 2: "+Obj2Notes+"; Objective 3: "+Obj3Notes+"; Objective 4: "+Obj4Notes+"; Bonus: "+BonusNotes+"; Other notes: "+MiscNotes
     return [userData[0],userData[2],userData[4],userData[6],userData[8],notesString]
@@ -142,6 +150,7 @@ def grading_unit():
     #Get the ubid of that student
     current_student = readassigned(current)
     if current_student==-1:
+        print("You've run out of student to grade! Crashing and printing csv...")
         print("Copy and paste in results into first obj column in google sheets, click on data in the top bar and press split text to columns")
         print("If you have any troubles, make sure to be splitting by comma")
         print("------------")
@@ -243,6 +252,9 @@ def grading_unit():
                     firstrun = False
                 buildAndRun = False
                 print("Done!")
+                now = datetime.now()
+                current_time = now.strftime("%I:%M %p")
+                print("Current Time =", current_time)
             except Exception as e:
                 print("Error!")
                 print(e)
@@ -283,10 +295,15 @@ def grading_unit():
             print("------------")
         u_input = input(prompt_text)
     
-    save = input("save? y/n\n")
-    while save!="y" and save!="n":
+    now = datetime.now()
+    current_time = now.strftime("%I:%M %p")
+    print("Time: ", current_time)
+    print(f'You have graded {len(grades)} students')
+    
+    save = ""
+    while save!="y" and save!="n" and u_input!="c":
         save = input("save? y/n")
-    if save=="y":
+    if save=="y" or u_input=="c":
         writegrades()
         current = int(current) + 1
         writecurrent(str(current))
@@ -306,22 +323,30 @@ if not os.path.isfile(filename) or not os.path.isfile(grades_filename):
     writecurrent("0")
 else:
     grades = readgrades()
-    prompt_text = "Enter y to reset data or j to print csv output. Otherwise press enter to start!\n"
+    prompt_text = "Enter y to reset data or j to print csv output, or r to use regrade mode. Otherwise press enter to start!\n"
     print(f'You have graded {len(grades)} students')
-    reset = input(prompt_text)
-    if (reset=="y"):
-        grades = {}
-        writegrades()
-        writecurrent(str(0))
-    elif reset=="j":
-        print("Copy and paste in results into first obj column in google sheets, click on data in the top bar and press split text to columns")
-        print("If you have any troubles, make sure to be splitting by comma")
-        print("------------")
-        print(get_csv())
-        print("------------")
-        reset = input("Enter any key to leave...")
     
-
+    reset = input(prompt_text)
+    
+    while reset!="y" and reset!="j" and reset!="r" and reset.strip()!="":
+        if (reset=="y"):
+            print("Resetting...")
+            grades = {}
+            writegrades()
+            writecurrent(str(0))
+        elif reset=="j":
+            print("Copy and paste in results into first obj column in google sheets, click on data in the top bar and press split text to columns")
+            print("If you have any troubles, make sure to be splitting by comma")
+            print("------------")
+            print(get_csv())
+            print("------------")
+        
+    
+    
+    
+    if reset=="r":
+        print("Will signal that we are regrading in feedback column")
+        regrade = True
 while grading_unit():
     print("Grading loop...")
 print("Killing remaining container...please wait...")   
