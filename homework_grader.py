@@ -22,7 +22,7 @@ grades = {}
 PORT = 8000
 firstrun = True
 regrade = False
-
+times = []
 
 
 def readassigned(current):
@@ -255,6 +255,7 @@ def grading_unit():
                 now = datetime.now()
                 current_time = now.strftime("%I:%M %p")
                 print("Time: ", current_time)
+                times.append(current_time)
                 print(f'You have graded {len(grades)} students')
             except Exception as e:
                 print("Error!")
@@ -298,8 +299,9 @@ def grading_unit():
     
     now = datetime.now()
     current_time = now.strftime("%I:%M %p")
+    times.append(current_time)
     print("Time: ", current_time)
-    print(f'You have graded {len(grades)} students')
+    
     
     save = ""
     while save!="y" and save!="n" and u_input!="c":
@@ -350,7 +352,8 @@ else:
         regrade = True
 while grading_unit():
     print("Grading loop...")
-print("Killing remaining container...please wait...")   
+print("Killing remaining container...please wait...")
+print(times)   
 client = docker.from_env()
 for container in client.containers.list():
     container.stop()
