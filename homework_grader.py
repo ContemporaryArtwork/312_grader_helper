@@ -254,7 +254,8 @@ def grading_unit():
                 print("Done!")
                 now = datetime.now()
                 current_time = now.strftime("%I:%M %p")
-                print("Current Time =", current_time)
+                print("Time: ", current_time)
+                print(f'You have graded {len(grades)} students')
             except Exception as e:
                 print("Error!")
                 print(e)
