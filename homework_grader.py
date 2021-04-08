@@ -147,9 +147,10 @@ def get_csv():
         notesVal = get_notes(notes)
         
         for idx,key2 in enumerate(scores):
-            line+=scores[key2]
-            if (idx<len(scores)-1):
-                line+=", "
+            if not (regrade and key2=='bonusScore'):
+                line+=scores[key2]
+                if (idx<len(scores)-1):
+                    line+=", "
         if not regrade:
             line+=f', {notesVal}'
         line += "\n"
