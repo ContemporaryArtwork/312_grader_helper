@@ -153,6 +153,8 @@ def get_csv():
                     line+=", "
         if not regrade:
             line+=f', {notesVal}'
+        if regrade:
+            line = line[:len(line)-2]
         line += "\n"
         retval += line
     return retval
