@@ -87,55 +87,71 @@ def run(cmd):
     completed = subprocess.run(["powershell", "-Command", cmd], capture_output=True)
     return completed
 def prompt():
-    userData = []
-    userData.append(input("Score for Obj1:\n"))
-    userData.append(input("Notes for Obj1:\n"))
-    userData.append(input("Score for Obj2:\n"))
-    userData.append(input("Notes for Obj2:\n"))
-    userData.append(input("Score for Obj3:\n"))
-    userData.append(input("Notes for Obj3:\n"))
-    userData.append(input("Score for Obj4:\n"))
-    userData.append(input("Notes for Obj4:\n"))
-    userData.append(input("Score for bonus:\n"))
-    userData.append(input("Notes for the bonus:\n"))
-    userData.append(input("Overall notes:\n"))
+    scores = {}
+    notes = {}
+    
+    scores['obj1Score']=(input("Score for Obj1:\n"))
+    notes['obj1Notes']=(input("Notes for Obj1:\n"))
+    scores['obj2Score']=(input("Score for Obj2:\n"))
+    notes['obj2Notes']=(input("Notes for Obj2:\n"))
+    scores['obj3Score']=(input("Score for Obj3:\n"))
+    notes['obj3Notes']=(input("Notes for Obj3:\n"))
+    scores['obj4Score']=(input("Score for Obj4:\n"))
+    notes['obj4Notes']=(input("Notes for Obj4:\n"))
+    scores['bonusScore']=(input("Score for bonus:\n"))
+    notes['bonusNotes']=(input("Notes for the bonus:\n"))
+    notes['overallNotes']=(input("Overall notes:\n"))
+    
+    return {"scores":scores,"notes":notes}
+
+def get_notes(notes):
     notesString = ""
-    for idx in range(len(userData)):
-        if len(userData[idx])>0:
-            if (idx==1 or idx==3 or idx == 5 or idx == 7 or idx == 9 or idx==10) and len(notesString)>0:
-                notesString += "; "
+    
+    #Iterate through the notes
+    for key in notes:
+        if len(notes[key])>0:
+            #Add delimiter per discrete note
+            if len(notesString)>0:
+                notesString += "\\n "
+                #Replace double quotes with single quotes
+                notes[key].replace("\"","\'")
             
-            if idx==1:
-                notesString += ("Objective 1: " + userData[idx])
-            elif idx==3:
-                notesString += ("Objective 2: " + userData[idx])
-            elif idx==5:
-                notesString += ("Objective 3: " + userData[idx])
-            elif idx==7:
-                notesString += ("Objective 4: " + userData[idx])
-            elif idx==9:
-                notesString += ("Notes for the bonus: " + userData[idx])
-            elif idx==10:
-                notesString += ("Overall notes: " + userData[idx])
-            
-    if regrade:
-        notesString = "Regrade: "+notesString
-    assert(len(userData)>0),"You need to enter something!"            
-    #notesString = "Objective 1: "+Obj1Notes+"; Objective 2: "+Obj2Notes+"; Objective 3: "+Obj3Notes+"; Objective 4: "+Obj4Notes+"; Bonus: "+BonusNotes+"; Other notes: "+MiscNotes
-    return [userData[0],userData[2],userData[4],userData[6],userData[8],notesString]
+            #Handle specific notes
+            if key=="obj1Notes":
+                notesString += ("Objective 1: " + notes['obj1Notes'])
+            elif key=="obj2Notes":
+                notesString += ("Objective 2: " + notes['obj2Notes'])
+            elif key == "obj3Notes":
+                notesString += ("Objective 3: " + notes['obj3Notes'])
+            elif key == "obj4Notes":
+                notesString += ("Objective 4: " + notes['obj4Notes'])
+            elif key == "bonusNotes":
+                notesString += ("Notes for the bonus: " + notes['bonusNotes'])
+            elif key == "overallNotes":
+                notesString += ("Overall notes: " + notes['overallNotes'])
+    return notesString
+              
 
 def get_csv():
     retval = ""
+    #Print order
     fLine = "Order: "
     for key in grades:
         fLine += (key+", ")
     retval += (fLine[:len(fLine)-2]+"\n")
+    #Actually make the csv
     for key in grades:
         line = ""
-        for idx in range(len(grades[key])):
-            line+=("\""+grades[key][idx].replace("\"","\'")+"\"")
-            if idx!=5:
-                line+=","  
+        scores = grades[key]["scores"]
+        notes = grades[key]["notes"]
+        notesVal = get_notes(notes)
+        
+        for idx,key2 in enumerate(scores):
+            line+=scores[key2]
+            if (idx<len(scores)-1):
+                line+=", "
+        if not regrade:
+            line+=f', {notesVal}'
         line += "\n"
         retval += line
     return retval
