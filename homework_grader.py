@@ -169,6 +169,9 @@ def grading_unit():
     #Get the ubid of that student
     current_student = readassigned(current)
     if current_student==-1:
+        regradeStr = input("Regrade? y/n\n")
+        if regradeStr == "y":
+            regrade = True
         print("You've run out of student to grade! Crashing and printing csv...")
         print("Copy and paste in results into first obj column in google sheets, click on data in the top bar and press split text to columns")
         print("If you have any troubles, make sure to be splitting by comma")
