@@ -272,7 +272,7 @@ def grading_unit():
         while buildAndRun:
             try:
                 if has_compose and os.name=='nt':
-                    process = subprocess.Popen(f'docker-compose --log-level ERROR -f \"{os.path.realpath(compose_location)}\" up --detach')
+                    process = subprocess.Popen(f'docker-compose --log-level ERROR -f \"{os.path.realpath(compose_location)}\" up --build --detach')
                     process.wait()
                     if firstrun:
                         webbrowser.open(f'http://localhost:8080/')
