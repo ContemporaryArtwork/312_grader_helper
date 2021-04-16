@@ -239,8 +239,10 @@ def grading_unit():
     
     try:
         compose_location = glob(current_student_dir+"\\**\\docker-compose.yml",recursive=True)[0]
+        PORT = 8080
         has_compose = True
     except:
+        PORT = 8000
         has_compose = False
     
             
@@ -270,8 +272,11 @@ def grading_unit():
         while buildAndRun:
             try:
                 if has_compose and os.name=='nt':
-                    process = subprocess.Popen(f'docker-compose --log-level ERROR -f \"{os.path.realpath(compose_location)}\" up --build --detach')
+                    process = subprocess.Popen(f'docker-compose --log-level ERROR -f \"{os.path.realpath(compose_location)}\" up --detach')
                     process.wait()
+                    if firstrun:
+                        webbrowser.open(f'http://localhost:8080/')
+                        firstrun = False
                 else:
                     #We don't have a docker-compose
                     #Build the container
@@ -315,7 +320,7 @@ def grading_unit():
     print("\nYour input:")
     print(grades[current_student])
     print("------------")
-    prompt_text = "q to quit, c to continue, r to redo grading data entry, j to print csv output\n"
+    prompt_text = "q to quit, c to continue, r to redo grading data entry, j to print csv output, d for docker-compose restart\n"
     
     u_input = ""
     
@@ -332,6 +337,12 @@ def grading_unit():
             print("------------")
             print(get_csv())
             print("------------")
+        elif u_input == "d":
+            if not has_compose:
+                print("no compose file found!")
+            else:
+                process = subprocess.Popen(f'docker-compose -f \"{os.path.realpath(compose_location)}\" restart')
+                process.wait()
         u_input = input(prompt_text)
     
     now = datetime.now()
