@@ -238,7 +238,7 @@ def grading_unit():
     dockerfile_location = glob(current_student_dir+"\\**\\[Dd]ockerfile",recursive=True)
     
     try:
-        compose_location = glob(current_student_dir+"\\**\\docker-compose.yml",recursive=True)
+        compose_location = glob(current_student_dir+"\\**\\docker-compose.yml",recursive=True)[0]
         has_compose = True
     except:
         has_compose = False
