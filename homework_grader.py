@@ -158,41 +158,16 @@ def get_csv():
         line += "\n"
         retval += line
     return retval
-#One unit of grading
-def grading_unit():
-    global grades
-    global firstrun
-    grades = readgrades()
-    #Get the index of the student currently being graded
-    current = readcurrent()
     
-    #Get the ubid of that student
-    current_student = readassigned(current)
-    if current_student==-1:
-        regradeStr = input("Regrade? y/n\n")
-        if regradeStr == "y":
-            regrade = True
-        print("You've run out of student to grade! Crashing and printing csv...")
-        print("Copy and paste in results into first obj column in google sheets, click on data in the top bar and press split text to columns")
-        print("If you have any troubles, make sure to be splitting by comma")
-        print("------------")
-        print(get_csv())
-        print("------------")
-        return False
-    try:
-        current_student_dir = glob(f'.\\{current_student}\\')[0]
-    except:
-        print("You've run out of student to grade in this directory! Crashing and printing csv...")
-        print("Copy and paste in results into first obj column in google sheets, click on data in the top bar and press split text to columns")
-        print("If you have any troubles, make sure to be splitting by comma")
-        print(get_csv())
-        return False
-    
-    #Recursively search for their dockerfile
-    dockerfile_location = glob(current_student_dir+"\\**\\[Dd]ockerfile",recursive=True)
-    #Recursively search for their report
-    report_location = glob(current_student_dir+"\\**\\*report*",recursive=True)
-    #They must have a dockerfile
+def nomore_students():
+    print("You've run out of student to grade! Crashing and printing csv...")
+    print("Copy and paste in results into first obj column in google sheets, click on data in the top bar and press split text to columns")
+    print("If you have any troubles, make sure to be splitting by comma")
+    print("------------")
+    print(get_csv())
+    print("------------")
+
+def print_report(current_student,report_location):
     #They might have a report, if so print it
     if (len(report_location)>1):
         print("------------")
@@ -216,41 +191,75 @@ def grading_unit():
         if (len(content)==0):
             print("Empty report!")
         print("------------")
-    
     else:
         print("------------")
         print(f'Appears {current_student} does not have a report.txt...')
         print("------------")
+
+def handle_dockerfiles(dockerfile_location):
+    print("UHOH\n------------")
+    print(f'{current_student} has more than 1 dockerfile!?!?')
+    for num,dockerfile in enumerate(dockerfile_location):
+        print(num,dockerfile)
+    idx = int(input("Enter the index of the dockerfile location you like the best!\n"))
+    assert(idx>=0 and idx<len(dockerfile_location)),"Crashing because you entered a bad index!!"
+    dockerfile_location = [dockerfile_location[idx]]
+    print("------------")
+    return dockerfile_location
+
+#One unit of grading
+def grading_unit():
+    global grades
+    global firstrun
+    grades = readgrades()
+    #Get the index of the student currently being graded
+    current = readcurrent()
+    
+    #Get the ubid of that student
+    current_student = readassigned(current)
+    if current_student==-1:
+        regradeStr = input("Regrade? y/n\n")
+        if regradeStr == "y":
+            regrade = True
+        nomore_students()
+        return False
+    try:
+        current_student_dir = glob(f'.\\{current_student}\\')[0]
+    except:
+        nomore_students()
+        return False
+    #Recursively search for their report
+    report_location = glob(current_student_dir+"\\**\\*report*",recursive=True)
+    
+    #print report
+    print_report(current_student,report_location)
+    
+    #Recursively search for their dockerfile
+    dockerfile_location = glob(current_student_dir+"\\**\\[Dd]ockerfile",recursive=True)
+    
+    try:
+        compose_location = glob(current_student_dir+"\\**\\docker-compose.yml",recursive=True)[0]
+        has_compose = True
+    except:
+        has_compose = False
+    
             
-    #Handle dockerfile stuff
-    
-        
-        
-    if (len(dockerfile_location)>1):
-        print("UHOH\n------------")
-        print(f'{current_student} has more than 1 dockerfile!?!?')
-        for num,dockerfile in enumerate(dockerfile_location):
-            print(num,dockerfile)
-        idx = int(input("Enter the index of the dockerfile location you like the best!\n"))
-        assert(idx>=0 and idx<len(dockerfile_location)),"Crashing because you entered a bad index!!"
-        dockerfile_location = [dockerfile_location[idx]]
-        print("------------")
+    #Handle multiple dockerfiles
+    if (not has_compose and len(dockerfile_location)>1):
+        dockerfile_location = handle_dockerfiles(dockerfile_location)
     
     
-    if (len(dockerfile_location)==0):
+    if (not has_compose and len(dockerfile_location)==0):
         print(f'{current_student} does not have a dockerfile? Initiating manual grading...')    
     else:
+        #This step isn't necessary anymore
         dockerfile_location = dockerfile_location[0]
+        #If we're in windows, open the path of the dockerfile
         if os.name == 'nt':
             subprocess.Popen(f'explorer /select,\"{os.path.realpath(dockerfile_location)}\"')
         
         print(f'Killing containers, building and running container on port {PORT}...')
         #Kill all docker containers
-        '''
-        kill = threading.Thread(target=run,
-            args=('docker ps -q | % { docker stop $_ }',), 
-        )
-        kill.start()'''
         client = docker.from_env()
         for container in client.containers.list():
             container.stop()
@@ -260,25 +269,25 @@ def grading_unit():
         buildAndRun = True
         while buildAndRun:
             try:
-                #Build the container
-                dcontainer = client.images.build(path=os.path.realpath(os.path.dirname(dockerfile_location)),dockerfile=os.path.realpath(dockerfile_location),tag="student")
-                #docker_build_output = run(f'docker build -t student -f {dockerfile_location} {os.path.dirname(dockerfile_location)}')
-                #Open path in explorer
-                
-                #Run the container
-                #kill.join()
-                container = client.containers.run('student',ports={f'{PORT}/tcp':8000},
-                                                  detach=True)
-                if firstrun:
-                    webbrowser.open(f'http://localhost:{PORT}/')
-                    firstrun = False
+                if has_compose and os.name=='nt':
+                    process = subprocess.Popen(f'docker-compose --log-level ERROR -f \"{os.path.realpath(compose_location)}\" up --build --detach')
+                    process.wait()
+                else:
+                    #We don't have a docker-compose
+                    #Build the container
+                    dcontainer = client.images.build(path=os.path.realpath(os.path.dirname(dockerfile_location)),dockerfile=os.path.realpath(dockerfile_location),tag="student")
+                    #docker_build_output = run(f'docker build -t student -f {dockerfile_location} {os.path.dirname(dockerfile_location)}')
+                    #Open path in explorer
+                    
+                    #Run the container
+                    container = client.containers.run('student',ports={f'{PORT}/tcp':8000},
+                                                      detach=True)
+                    if firstrun:
+                        webbrowser.open(f'http://localhost:{PORT}/')
+                        firstrun = False
                 buildAndRun = False
                 print("Done!")
-                now = datetime.now()
-                current_time = now.strftime("%I:%M %p")
-                print("Time: ", current_time)
-                times.append(current_time)
-                print(f'You have graded {len(grades)} students')
+                
             except Exception as e:
                 print("Error!")
                 print(e)
@@ -294,6 +303,12 @@ def grading_unit():
                         sys.exit("Crashing because dockerfile is broken") 
                     else:
                         print("Going onto grading...")
+    #Print time and # of students graded
+    now = datetime.now()
+    current_time = now.strftime("%I:%M %p")
+    print("Time: ", current_time)
+    times.append(current_time)
+    print(f'You have graded {len(grades)} students')
     
     print("------------")
     grades[current_student] = prompt()
