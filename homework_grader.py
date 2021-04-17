@@ -110,11 +110,14 @@ def get_notes(notes):
     #Iterate through the notes
     for key in notes:
         if len(notes[key])>0:
+            if notesString =="":
+                notesString = "\""
             #Add delimiter per discrete note
-            if len(notesString)>0:
+            if len(notesString)>0 and notesString!="\"":
                 notesString += "\\n "
                 #Replace double quotes with single quotes
-                notes[key].replace("\"","\'")
+                notes[key] = notes[key].replace("\"","\'")
+                
             
             #Handle specific notes
             if key=="obj1Notes":
@@ -129,6 +132,8 @@ def get_notes(notes):
                 notesString += ("Notes for the bonus: " + notes['bonusNotes'])
             elif key == "overallNotes":
                 notesString += ("Overall notes: " + notes['overallNotes'])
+    if (notesString != ""):
+        notesString = notesString + "\""
     return notesString
               
 
@@ -206,6 +211,10 @@ def handle_dockerfiles(dockerfile_location):
     dockerfile_location = [dockerfile_location[idx]]
     print("------------")
     return dockerfile_location
+
+def compose_restart(compose_location):
+    process = subprocess.Popen(f'docker-compose -f \"{os.path.realpath(compose_location)}\" restart')
+    process.wait()
 
 #One unit of grading
 def grading_unit():
@@ -341,8 +350,8 @@ def grading_unit():
             if not has_compose:
                 print("no compose file found!")
             else:
-                process = subprocess.Popen(f'docker-compose -f \"{os.path.realpath(compose_location)}\" restart')
-                process.wait()
+                #Restart
+                compose_restart(compose_location)
         u_input = input(prompt_text)
     
     now = datetime.now()
