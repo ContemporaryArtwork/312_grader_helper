@@ -24,7 +24,18 @@ PORT = 8000
 firstrun = True
 regrade = False
 times = []
+deleteall = False
 
+
+def process_argv():
+    global regrade
+    global deleteall
+    if (len(sys.argv)>2):
+        for arg in sys.argv[2:]:
+            if (arg=="--deleteall"):
+                deleteall = True
+            elif (arg=="--regrade"):
+                regrade = True
 
 def print_regrade_objectives(student):
     if os.path.isfile('regrades.csv'):
@@ -229,6 +240,8 @@ def compose_restart(compose_location):
 def grading_unit():
     global grades
     global firstrun
+    global regrade
+    global deleteall
     grades = readgrades()
     #Get the index of the student currently being graded
     current = readcurrent()
@@ -283,7 +296,7 @@ def grading_unit():
         client = docker.from_env()
         for container in client.containers.list():
             container.stop()
-            if (len(sys.argv)>2 and sys.argv[2]=="--deleteall"):
+            if (deleteall):
                 container.remove()
             
         buildAndRun = True
@@ -386,6 +399,7 @@ def grading_unit():
     
 
 
+process_argv()
 
 if not os.path.isfile(filename) or not os.path.isfile(grades_filename):
     print("Local data files do not exist. Rewriting...")
@@ -394,12 +408,12 @@ if not os.path.isfile(filename) or not os.path.isfile(grades_filename):
     writecurrent("0")
 else:
     grades = readgrades()
-    prompt_text = "Enter y to reset data or j to print csv output, or r to use regrade mode. Otherwise press enter to start!\n"
+    prompt_text = "Enter y to reset data or j to print csv output. Otherwise press enter to start!\n"
     print(f'You have graded {len(grades)} students')
     
     reset = input(prompt_text)
     
-    while reset!="y" and reset!="j" and reset!="r" and reset.strip()!="":
+    while reset!="y" and reset!="j" and reset.strip()!="":
         if (reset=="y"):
             print("Resetting...")
             grades = {}
@@ -412,12 +426,6 @@ else:
             print(get_csv())
             print("------------")
         
-    
-    
-    
-    if reset=="r":
-        print("Will signal that we are regrading in feedback column")
-        regrade = True
 while grading_unit():
     print("Grading loop...")
 print("Killing remaining container...please wait...")
@@ -425,7 +433,7 @@ print(times)
 client = docker.from_env()
 for container in client.containers.list():
     container.stop()
-if (len(sys.argv)>2 and sys.argv[2]=="--deleteall"):
+if (deleteall):
     run("docker ps -a -q | % { docker rm $_ }")
 
 
