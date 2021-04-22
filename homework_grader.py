@@ -6,6 +6,7 @@ import json
 import sys
 import docker
 import webbrowser
+import csv
 from datetime import datetime
 
 
@@ -25,6 +26,17 @@ regrade = False
 times = []
 
 
+def print_regrade_objectives(student):
+    if os.path.isfile('regrades.csv'):
+        with open('regrades.csv') as csvDataFile:
+            csvReader = csv.reader(csvDataFile)
+            for row in csvReader:
+                if (row[0]==student):
+                    for idx,val in enumerate(row[1:]):
+                        if (int(val)<3):
+                            print (f'Objective {idx+1} needs regrading')
+                        
+
 def readassigned(current):
     #If the file exists
     assert(os.path.isfile(assigned_filename))
@@ -39,10 +51,7 @@ def readassigned(current):
     if not int(current)<len(content):
         return -1
     
-    return content[int(current)]
-    
-    
-    
+    return content[int(current)]   
 
 def readcurrent():
     #If the file exists
@@ -114,7 +123,7 @@ def get_notes(notes):
                 notesString = "\""
             #Add delimiter per discrete note
             if len(notesString)>0 and notesString!="\"":
-                notesString += "\\n "
+                notesString += "\\n"
                 #Replace double quotes with single quotes
                 notes[key] = notes[key].replace("\"","\'")
                 
@@ -323,6 +332,8 @@ def grading_unit():
     print("Time: ", current_time)
     times.append(current_time)
     print(f'You have graded {len(grades)} students')
+    if regrade:
+        print_regrade_objectives(current_student)
     
     print("------------")
     grades[current_student] = prompt()
