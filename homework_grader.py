@@ -100,6 +100,7 @@ def readgrades():
 def run(cmd):
     completed = subprocess.run(["powershell", "-Command", cmd], capture_output=True)
     return completed
+    
 def prompt():
     scores = {}
     notes = {}
@@ -343,6 +344,7 @@ def grading_unit():
     print("Time: ", current_time)
     times.append(current_time)
     print(f'You have graded {len(grades)} students')
+    print(f'Now grading: {current_student}')
     if regrade:
         print_regrade_objectives(current_student)
     
