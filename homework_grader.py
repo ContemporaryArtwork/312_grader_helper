@@ -60,19 +60,7 @@ def readassigned(current):
     
     return content[int(current)]   
 
-def readcurrent():
-    #If the file exists
-    if os.path.isfile(filename):
-        #Read file
-        with open(filename) as f:
-            content = f.readlines()
-        f.close()
-        #Probably should do some check here
-        assert(len(content)!=0)
-        return content[0]
-    else:
-        #Get first subdir in dir
-        return 0
+
 def writecurrent(current):
     f = open(filename, "w")
     f.write(current)
@@ -97,7 +85,19 @@ def readgrades():
     if not type(retval) == dict:
         retval = {}
     return retval
-
+    
+def readcurrent(grades):
+    with open(assigned_filename) as f:
+        content = f.readlines()
+    f.close()
+    
+    for idx,var in enumerate(content):
+        
+        if not (var.strip() in grades):
+            
+            return idx
+    
+    return -1 
 #Found this online 
 def run(cmd):
     completed = subprocess.run(["powershell", "-Command", cmd], capture_output=True)
@@ -244,10 +244,11 @@ def grading_unit():
     global deleteall
     grades = readgrades()
     #Get the index of the student currently being graded
-    current = readcurrent()
+    current = readcurrent(grades)
     
     #Get the ubid of that student
     current_student = readassigned(current)
+    
     if current_student==-1:
         regradeStr = input("Regrade? y/n\n")
         if regradeStr == "y":
@@ -256,93 +257,96 @@ def grading_unit():
         return False
     try:
         current_student_dir = glob(f'.\\{current_student}\\')[0]
+        student_exists = True
     except:
-        nomore_students()
-        return False
-    #Recursively search for their report
-    report_location = glob(current_student_dir+"\\**\\*report*",recursive=True)
+        print(f'{current_student} does not have a folder in this directory!')
+        student_exists = False
     
-    #print report
-    print_report(current_student,report_location)
-    
-    #Recursively search for their dockerfile
-    dockerfile_location = glob(current_student_dir+"\\**\\[Dd]ockerfile",recursive=True)
-    
-    try:
-        compose_location = glob(current_student_dir+"\\**\\docker-compose.yml",recursive=True)
-        if (len(compose_location)>1):
-            compose_location = handle_dockerfiles(compose_location)
-        else:
-            compose_location = compose_location[0]
-        PORT = 8080
-        has_compose = True
-    except:
-        PORT = 8000
-        has_compose = False
-    
-            
-    #Handle multiple dockerfiles
-    if (not has_compose and len(dockerfile_location)>1):
-        dockerfile_location = handle_dockerfiles(dockerfile_location)
-    
-    
-    if (not has_compose and len(dockerfile_location)==0):
-        print(f'{current_student} does not have a dockerfile? Initiating manual grading...')    
-    else:
-        #This step isn't necessary anymore
-        dockerfile_location = dockerfile_location[0]
-        #If we're in windows, open the path of the dockerfile
-        if os.name == 'nt':
-            subprocess.Popen(f'explorer /select,\"{os.path.realpath(dockerfile_location)}\"')
+    if (student_exists):
+        #Recursively search for their report
+        report_location = glob(current_student_dir+"\\**\\*report*",recursive=True)
         
-        print(f'Killing containers, building and running container on port {PORT}...')
-        #Kill all docker containers
-        client = docker.from_env()
-        for container in client.containers.list():
-            container.stop()
-            if (deleteall):
-                container.remove()
-            
-        buildAndRun = True
-        while buildAndRun:
-            try:
-                if has_compose and os.name=='nt':
-                    process = subprocess.Popen(f'docker-compose --log-level ERROR -f \"{os.path.realpath(compose_location)}\" up --build --detach')
-                    process.wait()
-                    if firstrun:
-                        webbrowser.open(f'http://localhost:8080/')
-                        firstrun = False
-                else:
-                    #We don't have a docker-compose
-                    #Build the container
-                    dcontainer = client.images.build(path=os.path.realpath(os.path.dirname(dockerfile_location)),dockerfile=os.path.realpath(dockerfile_location),tag="student")
-                    #docker_build_output = run(f'docker build -t student -f {dockerfile_location} {os.path.dirname(dockerfile_location)}')
-                    #Open path in explorer
-                    
-                    #Run the container
-                    container = client.containers.run('student',ports={f'{PORT}/tcp':8000},
-                                                      detach=True)
-                    if firstrun:
-                        webbrowser.open(f'http://localhost:{PORT}/')
-                        firstrun = False
-                buildAndRun = False
-                print("Done!")
+        #print report
+        print_report(current_student,report_location)
+        
+        #Recursively search for their dockerfile
+        dockerfile_location = glob(current_student_dir+"\\**\\[Dd]ockerfile",recursive=True)
+        
+        try:
+            compose_location = glob(current_student_dir+"\\**\\docker-compose.yml",recursive=True)
+            if (len(compose_location)>1):
+                compose_location = handle_dockerfiles(compose_location)
+            else:
+                compose_location = compose_location[0]
+            PORT = 8080
+            has_compose = True
+        except:
+            PORT = 8000
+            has_compose = False
+        
                 
-            except Exception as e:
-                print("Error!")
-                print(e)
-                tryAgain = input("Try building/running again? y/n")
-                while tryAgain!="y" and tryAgain!="n":
-                    tryAgain = input("Try building/running again? y/n")
-                if (tryAgain=="n"):
-                    buildAndRun = False
-                    exitVar = input("Exit? y/n")
-                    while exitVar!="y" and exitVar!="n":  
-                        exitVar = input("Exit? y/n")
-                    if (exitVar=="y"):
-                        sys.exit("Crashing because dockerfile is broken") 
+        #Handle multiple dockerfiles
+        if (not has_compose and len(dockerfile_location)>1):
+            dockerfile_location = handle_dockerfiles(dockerfile_location)
+        
+        
+        if (not has_compose and len(dockerfile_location)==0):
+            print(f'{current_student} does not have a dockerfile? Initiating manual grading...')    
+        else:
+            #This step isn't necessary anymore
+            dockerfile_location = dockerfile_location[0]
+            #If we're in windows, open the path of the dockerfile
+            if os.name == 'nt':
+                subprocess.Popen(f'explorer /select,\"{os.path.realpath(dockerfile_location)}\"')
+            
+            print(f'Killing containers, building and running container on port {PORT}...')
+            #Kill all docker containers
+            client = docker.from_env()
+            for container in client.containers.list():
+                container.stop()
+                if (deleteall):
+                    container.remove()
+                
+            buildAndRun = True
+            while buildAndRun:
+                try:
+                    if has_compose and os.name=='nt':
+                        process = subprocess.Popen(f'docker-compose --log-level ERROR -f \"{os.path.realpath(compose_location)}\" up --build --detach')
+                        process.wait()
+                        if firstrun:
+                            webbrowser.open(f'http://localhost:8080/')
+                            firstrun = False
                     else:
-                        print("Going onto grading...")
+                        #We don't have a docker-compose
+                        #Build the container
+                        dcontainer = client.images.build(path=os.path.realpath(os.path.dirname(dockerfile_location)),dockerfile=os.path.realpath(dockerfile_location),tag="student")
+                        #docker_build_output = run(f'docker build -t student -f {dockerfile_location} {os.path.dirname(dockerfile_location)}')
+                        #Open path in explorer
+                        
+                        #Run the container
+                        container = client.containers.run('student',ports={f'{PORT}/tcp':8000},
+                                                          detach=True)
+                        if firstrun:
+                            webbrowser.open(f'http://localhost:{PORT}/')
+                            firstrun = False
+                    buildAndRun = False
+                    print("Done!")
+                    
+                except Exception as e:
+                    print("Error!")
+                    print(e)
+                    tryAgain = input("Try building/running again? y/n")
+                    while tryAgain!="y" and tryAgain!="n":
+                        tryAgain = input("Try building/running again? y/n")
+                    if (tryAgain=="n"):
+                        buildAndRun = False
+                        exitVar = input("Exit? y/n")
+                        while exitVar!="y" and exitVar!="n":  
+                            exitVar = input("Exit? y/n")
+                        if (exitVar=="y"):
+                            sys.exit("Crashing because dockerfile is broken") 
+                        else:
+                            print("Going onto grading...")
     #Print time and # of students graded
     now = datetime.now()
     current_time = now.strftime("%I:%M %p")
