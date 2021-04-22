@@ -94,7 +94,7 @@ def readcurrent(grades):
     for idx,var in enumerate(content):
         
         if not (var.strip() in grades):
-            
+            print(var)
             return idx
     
     return -1 
@@ -156,27 +156,34 @@ def get_notes(notes):
 
 def get_csv():
     retval = ""
+    with open(assigned_filename) as f:
+        content = f.readlines()
+    f.close()
+    for idx in range(len(content)):
+        content[idx] = content[idx].strip()
     #Print order
     fLine = "Order: "
-    for key in grades:
+    for key in content:
         fLine += (key+", ")
     retval += (fLine[:len(fLine)-2]+"\n")
     #Actually make the csv
-    for key in grades:
+    for key in content:
         line = ""
         scores = grades[key]["scores"]
         notes = grades[key]["notes"]
         notesVal = get_notes(notes)
         
         for idx,key2 in enumerate(scores):
-            if not (regrade and key2=='bonusScore'):
-                line+=scores[key2]
-                if (idx<len(scores)-1):
-                    line+=", "
-        if not regrade:
-            line+=f', {notesVal}'
-        if regrade:
-            line = line[:len(line)-2]
+            
+            line+=f'{scores[key2]},' 
+        if (regrade):
+            line = line[:len(line)-1]
+        
+        #if not regrade:
+        line+=notesVal
+        #if regrade:
+        if notesVal == "":
+            line+="\"\""
         line += "\n"
         retval += line
     return retval
@@ -246,16 +253,16 @@ def grading_unit():
     #Get the index of the student currently being graded
     current = readcurrent(grades)
     
+
     #Get the ubid of that student
-    current_student = readassigned(current)
     
-    if current_student==-1:
-        regradeStr = input("Regrade? y/n\n")
-        if regradeStr == "y":
-            regrade = True
+    
+    if current==-1:
+        
         nomore_students()
         return False
     try:
+        current_student = readassigned(current)
         current_student_dir = glob(f'.\\{current_student}\\')[0]
         student_exists = True
     except:
