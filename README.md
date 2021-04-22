@@ -1,6 +1,6 @@
 # 312 Grader Helper
 Arguments:  
-python ```{name of grader} {file where students to be graded are separated by newlines} {--deleteall} {--regrade}```
+```python {name of grader} {file where students to be graded are separated by newlines} {--deleteall} {--regrade}```
 
 ## --deleteall:
   Delete all docker containers after finishing. Cleans up some clutter.
