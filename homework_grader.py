@@ -9,11 +9,6 @@ import webbrowser
 import csv
 from datetime import datetime
 
-
-
-
-
-
 filename = ".gradingstatus"
 assert (len(sys.argv)>1), "You need an argument for the location of your assigned students"
 assigned_filename = sys.argv[1]
@@ -25,7 +20,6 @@ firstrun = True
 regrade = False
 times = []
 deleteall = False
-
 
 def process_argv():
     global regrade
@@ -45,7 +39,7 @@ def print_regrade_objectives(student):
                 if (row[0]==student):
                     for idx,val in enumerate(row[1:]):
                         if (int(val)<3):
-                            print (f'Objective {idx+1} needs regrading')
+                            print (f'Objective {idx+1} needs regrading. Current score: {val}')
                         
 
 def readassigned(current):
@@ -223,10 +217,10 @@ def print_report(current_student,report_location):
 
 def handle_dockerfiles(dockerfile_location):
     print("UHOH\n------------")
-    print(f'{current_student} has more than 1 dockerfile!?!?')
+    print(f'{current_student} has more than 1 dockerfile or compose!?!?')
     for num,dockerfile in enumerate(dockerfile_location):
         print(num,dockerfile)
-    idx = int(input("Enter the index of the dockerfile location you like the best!\n"))
+    idx = int(input("Enter the index of the dockerfile/compose location you like the best!\n"))
     assert(idx>=0 and idx<len(dockerfile_location)),"Crashing because you entered a bad index!!"
     dockerfile_location = [dockerfile_location[idx]]
     print("------------")
@@ -269,7 +263,11 @@ def grading_unit():
     dockerfile_location = glob(current_student_dir+"\\**\\[Dd]ockerfile",recursive=True)
     
     try:
-        compose_location = glob(current_student_dir+"\\**\\docker-compose.yml",recursive=True)[0]
+        compose_location = glob(current_student_dir+"\\**\\docker-compose.yml",recursive=True)
+        if (len(compose_location)>1):
+            compose_location = handle_dockerfiles(compose_location)
+        else:
+            compose_location = compose_location[0]
         PORT = 8080
         has_compose = True
     except:
