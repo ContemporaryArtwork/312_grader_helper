@@ -38,9 +38,11 @@ def print_regrade_objectives(student):
             for row in csvReader:
                 if (row[0]==student):
                     for idx,val in enumerate(row[1:]):
-                        if (int(val)<3):
-                            print (f'Objective {idx+1} needs regrading. Current score: {val}')
-                        
+                        try:
+                            if (int(val)<3):
+                                print (f'Objective {idx+1} needs regrading. Current score: {val}')
+                        except:
+                            print(val)
 
 def readassigned(current):
     #If the file exists
