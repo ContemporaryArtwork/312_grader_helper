@@ -190,33 +190,36 @@ def nomore_students():
     print("------------")
 
 def print_report(current_student,report_location):
-    #They might have a report, if so print it
-    if (len(report_location)>1):
-        print("------------")
-        print(f'{current_student} has more than 1 reports')
-        for num,report in enumerate(report_location):
-            print(num,report)
-        idx = int(input("Enter the index of the report location you like the best!\n"))
-        assert(idx>=0 and idx<len(report_location)),"Crashing because you entered a bad index!!"
-        report_location = [report_location[idx]]
-        print("------------")
-    
-    if (len(report_location)==1):
-        print(f'{current_student}\'s Report:\n'+"------------")
+    try:
+        #They might have a report, if so print it
+        if (len(report_location)>1):
+            print("------------")
+            print(f'{current_student} has more than 1 reports')
+            for num,report in enumerate(report_location):
+                print(num,report)
+            idx = int(input("Enter the index of the report location you like the best!\n"))
+            assert(idx>=0 and idx<len(report_location)),"Crashing because you entered a bad index!!"
+            report_location = [report_location[idx]]
+            print("------------")
         
-        with open(report_location[0],encoding='utf-8') as f:
-                content = f.readlines()
-        f.close()
-        
-        for line in content:
-            print(line.strip())
-        if (len(content)==0):
-            print("Empty report!")
-        print("------------")
-    else:
-        print("------------")
-        print(f'Appears {current_student} does not have a report.txt...')
-        print("------------")
+        if (len(report_location)==1):
+            print(f'{current_student}\'s Report:\n'+"------------")
+            
+            with open(report_location[0],encoding='utf-8') as f:
+                    content = f.readlines()
+            f.close()
+            
+            for line in content:
+                print(line.strip())
+            if (len(content)==0):
+                print("Empty report!")
+            print("------------")
+        else:
+            print("------------")
+            print(f'Appears {current_student} does not have a report.txt...')
+            print("------------")
+    except:
+        print(f'{current_student} has a broken report!?')
 
 def handle_dockerfiles(dockerfile_location):
     print("UHOH\n------------")
