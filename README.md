@@ -1,6 +1,6 @@
 # 312 Grader Helper
 Python file must be placed in directory of student submissions.
-Arguments:  
+## Arguments:  
 ```python homework_grader.py  {file where students to be graded are separated by newlines} {--deleteall} {--regrade} {--hw5}```
 
 ## --deleteall:
