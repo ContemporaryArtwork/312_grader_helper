@@ -42,10 +42,10 @@ def print_regrade_objectives(student):
         with open('regrades.csv') as csvDataFile:
             csvReader = csv.reader(csvDataFile)
             for row in csvReader:
-                if (row[0] == student):
+                if row[0] == student:
                     for idx, val in enumerate(row[1:]):
                         try:
-                            if (int(val) < 3):
+                            if int(val) < 3:
                                 print(f'Objective {idx + 1} needs regrading. Current score: {val}')
                         except:
                             print(val)
@@ -296,21 +296,20 @@ def grading_unit():
     grades = readgrades()
     # Get the index of the student currently being graded
     current = readcurrent(grades)
-
+    current_student = readassigned(current)
     # Get the ubid of that student
 
     if current == -1:
         nomore_students()
         return False
     try:
-        current_student = readassigned(current)
         current_student_dir = glob(f'.\\{current_student}\\')[0]
         student_exists = True
     except:
         print(f'{current_student} does not have a folder in this directory!')
         student_exists = False
 
-    if (student_exists):
+    if student_exists:
         # Recursively search for their report
         report_location = glob(current_student_dir + "\\**\\*report*", recursive=True)
 
@@ -323,7 +322,7 @@ def grading_unit():
         try:
             compose_location = glob(current_student_dir + "\\**\\docker-compose.yml", recursive=True)
             if (len(compose_location) > 1):
-                compose_location = handle_dockerfiles(compose_location, current_student)
+                compose_location = handle_dockerfiles(compose_location, current_student)[0]
             else:
                 compose_location = compose_location[0]
             PORT = 8080
@@ -411,7 +410,8 @@ def grading_unit():
     print("\nYour input:")
     print(grades[current_student])
     print("------------")
-    prompt_text = "q to quit, c to continue, r to redo grading data entry, j to print csv output, d for docker-compose restart\n"
+    prompt_text = "q to quit, c to continue, r to redo grading data entry, j to print csv output, " \
+                  "d for docker-compose restart\n "
 
     u_input = ""
 
