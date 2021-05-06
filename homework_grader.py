@@ -37,7 +37,9 @@ def process_argv():
                 is_hw5 = True
 
 
-def print_regrade_objectives(student):
+def parse_regrades(student):
+    grades = []
+    notes = ""
     if os.path.isfile('regrades.csv'):
         with open('regrades.csv') as csvDataFile:
             csvReader = csv.reader(csvDataFile)
@@ -45,10 +47,13 @@ def print_regrade_objectives(student):
                 if row[0] == student:
                     for idx, val in enumerate(row[1:]):
                         try:
-                            if int(val) < 3:
-                                print(f'Objective {idx + 1} needs regrading. Current score: {val}')
+                            if int(val)==int(val):
+                                grades.append(val)
                         except:
-                            print(val)
+                            notes = val
+    return (grades, notes)
+
+
 
 
 def readassigned(current):
@@ -115,10 +120,12 @@ def run(cmd):
     return completed
 
 
-def prompt():
+def prompt(grades):
     global is_hw5
+    global regrade
     scores = {}
     notes = {}
+    
 
     if is_hw5:
         scores['obj1Score'] = (input("Score for Obj1:\n"))
@@ -131,17 +138,29 @@ def prompt():
         notes['bonusNotes'] = (input("Notes for the bonus:\n"))
         notes['overallNotes'] = (input("Overall notes:\n"))
     else:
-        scores['obj1Score'] = (input("Score for Obj1:\n"))
-        notes['obj1Notes'] = (input("Notes for Obj1:\n"))
-        scores['obj2Score'] = (input("Score for Obj2:\n"))
-        notes['obj2Notes'] = (input("Notes for Obj2:\n"))
-        scores['obj3Score'] = (input("Score for Obj3:\n"))
-        notes['obj3Notes'] = (input("Notes for Obj3:\n"))
-        scores['obj4Score'] = (input("Score for Obj4:\n"))
-        notes['obj4Notes'] = (input("Notes for Obj4:\n"))
-        scores['bonusScore'] = (input("Score for bonus:\n"))
-        notes['bonusNotes'] = (input("Notes for the bonus:\n"))
-        notes['overallNotes'] = (input("Overall notes:\n"))
+        if regrade:
+            for idx, grade in enumerate(grades):
+                if int(grade) == 3:
+                    scores[f'obj{idx+1}Score'] = 3
+                    notes[f'obj{idx+1}Notes'] = ''
+                else:
+                    scores[f'obj{idx+1}Score'] = (input(f'Score for Obj{idx+1}:\n'))
+                    notes[f'obj{idx+1}Notes'] = (input(f'Notes for Obj{idx+1}:\n'))
+            scores['bonusScore'] = 0
+            notes['bonusNotes'] =  ''
+            notes['overallNotes'] = (input("Overall notes:\n"))
+        else:
+            scores['obj1Score'] = (input("Score for Obj1:\n"))
+            notes['obj1Notes'] = (input("Notes for Obj1:\n"))
+            scores['obj2Score'] = (input("Score for Obj2:\n"))
+            notes['obj2Notes'] = (input("Notes for Obj2:\n"))
+            scores['obj3Score'] = (input("Score for Obj3:\n"))
+            notes['obj3Notes'] = (input("Notes for Obj3:\n"))
+            scores['obj4Score'] = (input("Score for Obj4:\n"))
+            notes['obj4Notes'] = (input("Notes for Obj4:\n"))
+            scores['bonusScore'] = (input("Score for bonus:\n"))
+            notes['bonusNotes'] = (input("Notes for the bonus:\n"))
+            notes['overallNotes'] = (input("Overall notes:\n"))
 
     return {"scores": scores, "notes": notes}
 
@@ -403,10 +422,13 @@ def grading_unit():
     print(f'You have graded {len(grades)} students')
     print(f'Now grading: {current_student}')
     if regrade:
-        print_regrade_objectives(current_student)
+        prev_grades,notes = parse_regrades(current_student)
+        print(notes)
+    else:
+        prev_grades = [0,0,0,0]
 
     print("------------")
-    grades[current_student] = prompt()
+    grades[current_student] = prompt(prev_grades)
     print("\nYour input:")
     print(grades[current_student])
     print("------------")
@@ -418,7 +440,7 @@ def grading_unit():
     while (u_input != "q" and u_input != "c"):
         if u_input == "r":
             print("------------")
-            grades[current_student] = prompt()
+            grades[current_student] = prompt(prev_grades)
             print("\nYour input:")
             print(grades[current_student])
             print("------------")
