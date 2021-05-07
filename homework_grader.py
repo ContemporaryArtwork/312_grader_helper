@@ -331,7 +331,7 @@ def grading_unit():
         current_student_dir = glob(f'.\\{current_student}\\')[0]
         student_exists = True
     except:
-        print(f'{current_student} does not have a folder in this directory!')
+        print(f'{current_student} does not have a submission in this directory!')
         student_exists = False
 
     if student_exists:
