@@ -145,6 +145,9 @@ def prompt(grades):
                     notes[f'obj{idx+1}Notes'] = ''
                 else:
                     scores[f'obj{idx+1}Score'] = (input(f'Prev score: {grade}\nScore for Obj{idx+1}:\n'))
+                    if scores[f'obj{idx+1}Score'].strip() == '':
+                        print(f'Giving original grade of {grade}')
+                        scores[f'obj{idx+1}Score'] = grade
                     notes[f'obj{idx+1}Notes'] = (input(f'Notes for Obj{idx+1}:\n'))
             scores['bonusScore'] = 0
             notes['bonusNotes'] =  ''
