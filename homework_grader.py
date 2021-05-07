@@ -167,7 +167,7 @@ def prompt(grades):
 
 def get_notes(notes):
     global is_hw5
-    notesString = ""
+    notesString = ''
 
     # Iterate through the notes
     for key in notes:
@@ -232,7 +232,10 @@ def get_csv():
         notesVal = get_notes(notes)
 
         for idx, key2 in enumerate(scores):
-            line += f'{scores[key2]},'
+            if (regrade and key2 != 'bonusScore') or not regrade:
+                line += f'{scores[key2]},'
+            elif regrade:
+                line += ','
         if (regrade):
             line = line[:len(line) - 1]
 
