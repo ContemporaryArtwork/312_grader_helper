@@ -128,15 +128,45 @@ def prompt(grades):
     
 
     if is_hw5:
-        scores['obj1Score'] = (input("Score for Obj1:\n"))
-        notes['obj1Notes'] = (input("Notes for Obj1:\n"))
-        scores['obj2/3Score'] = (input("Score for Obj2/3:\n"))
-        notes['obj2/3Notes'] = (input("Notes for Obj2/3:\n"))
-        scores['obj4Score'] = (input("Score for Obj4:\n"))
-        notes['obj4Notes'] = (input("Notes for Obj4:\n"))
-        scores['bonusScore'] = (input("Score for bonus:\n"))
-        notes['bonusNotes'] = (input("Notes for the bonus:\n"))
-        notes['overallNotes'] = (input("Overall notes:\n"))
+        if regrade:
+            for idx, grade in enumerate(grades):
+                scoreString = ''
+                notesString = ''
+                objString = ''
+                if idx==1:
+                    scoreString = 'obj2/3Score'
+                    notesString = 'obj2/3Notes'
+                    objString = 'Objectives 2/3'
+                elif idx==2:
+                    scoreString = 'obj4Score'
+                    notesString = 'obj4Notes'
+                    objString = 'Objective 4'
+                else:
+                    scoreString = f'obj{idx+1}Score'
+                    notesString = f'obj{idx+1}Notes'
+                    objString = f'Objective {idx+1}'
+                if int(grade) == 3:
+                    scores[scoreString] = 3
+                    notes[notesString] = ''
+                else:
+                    scores[scoreString] = (input(f'Prev score: {grade}\nScore for {objString}:\n'))
+                    if scores[scoreString].strip() == '':
+                        print(f'Giving original grade of {grade}')
+                        scores[scoreString] = grade
+                    notes[notesString] = (input(f'Notes for {objString}:\n'))
+            scores['bonusScore'] = 0
+            notes['bonusNotes'] =  ''
+            notes['overallNotes'] = (input("Overall notes:\n"))
+        else:
+            scores['obj1Score'] = (input("Score for Obj1:\n"))
+            notes['obj1Notes'] = (input("Notes for Obj1:\n"))
+            scores['obj2/3Score'] = (input("Score for Obj2/3:\n"))
+            notes['obj2/3Notes'] = (input("Notes for Obj2/3:\n"))
+            scores['obj4Score'] = (input("Score for Obj4:\n"))
+            notes['obj4Notes'] = (input("Notes for Obj4:\n"))
+            scores['bonusScore'] = (input("Score for bonus:\n"))
+            notes['bonusNotes'] = (input("Notes for the bonus:\n"))
+            notes['overallNotes'] = (input("Overall notes:\n"))
     else:
         if regrade:
             for idx, grade in enumerate(grades):
@@ -359,9 +389,13 @@ def grading_unit():
         # Handle multiple dockerfiles
         if (not has_compose and len(dockerfile_location) > 1):
             dockerfile_location = handle_dockerfiles(dockerfile_location)
+            
+        if (not has_compose and len(dockerfile_location) == 0):
+            print(f'{current_student} does not have a dockerfile?')
+            input('Check if there are any hidden (i.e. starting with a .) directories and unhide them')
 
         if (not has_compose and len(dockerfile_location) == 0):
-            print(f'{current_student} does not have a dockerfile? Initiating manual grading...')
+            print('Unable to find dockerfile')
         else:
             # This step isn't necessary anymore
             dockerfile_location = dockerfile_location[0]
